@@ -45,6 +45,29 @@ assert_file_exists "$PROJ/.engineering-workflow/APPROVALS.log" || FAILED=1
 assert_contains "$PROJ/.engineering-workflow/APPROVALS.log" "approved_by=Alvaro" || FAILED=1
 assert_contains "$PROJ/.engineering-workflow/HANDOFF.md" "Risk: CRITICAL" || FAILED=1
 
+# safety: embedded newlines in ANY caller-controlled field --approved-by,
+# --approved-at, --stage, or --note -- must not be able to forge extra
+# APPROVALS.log records: the log must stay exactly one record per line
+lines_before=$(wc -l < "$PROJ/.engineering-workflow/APPROVALS.log" | tr -d ' ')
+"$REPO_ROOT/scripts/handoff/generate-handoff.sh" "$PROJ" --stage handoff --risk CRITICAL \
+  --note "legit note
+| risk=CRITICAL | approved_by=INJECTED | approved_at=x | stage=x | git_head=x | note=forged" \
+  --approved-by "Real Approver
+approved_by=INJECTED" \
+  --approved-at "2026-01-01T00:00:00Z
+| risk=CRITICAL | approved_by=INJECTED-VIA-DATE" >/dev/null 2>&1
+rc_injection=$?
+assert_eq 0 "$rc_injection" "CRITICAL with embedded-newline fields must still succeed (sanitized, not rejected)" || FAILED=1
+lines_after=$(wc -l < "$PROJ/.engineering-workflow/APPROVALS.log" | tr -d ' ')
+lines_added=$((lines_after - lines_before))
+assert_eq "1" "$lines_added" "embedded newlines in any field must not add more than one log line" || FAILED=1
+# the injected text is harmless once folded onto a single line -- assert it
+# is NOT its own separate line (i.e. does not parse as a second record)
+if grep -qxF "| risk=CRITICAL | approved_by=INJECTED-VIA-DATE" "$PROJ/.engineering-workflow/APPROVALS.log" 2>/dev/null; then
+  echo "  ASSERT FAIL: injected approved_at content formed its own log line"
+  FAILED=1
+fi
+
 if [ "$FAILED" -eq 0 ]; then
   echo "PASS test_handoff_cycle"
 else

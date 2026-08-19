@@ -60,8 +60,15 @@ if [ "$risk" = "CRITICAL" ]; then
   [ -n "$approved_at" ] || approved_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   approvals_log="$EW_DIR/APPROVALS.log"
   git_head_for_log=$(git -C "$TARGET" rev-parse --short HEAD 2>/dev/null || echo "no-commits")
+  # Sanitize every caller-controlled free-text field before writing it into
+  # this line-oriented log: an embedded newline in any of them must never
+  # be able to forge what looks like a second, separate approval record.
+  safe_approved_by=$(ew_sanitize_log_field "$approved_by")
+  safe_approved_at=$(ew_sanitize_log_field "$approved_at")
+  safe_stage=$(ew_sanitize_log_field "$stage")
+  safe_note=$(ew_sanitize_log_field "$note")
   printf '%s | risk=CRITICAL | approved_by=%s | approved_at=%s | stage=%s | git_head=%s | note=%s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$approved_by" "$approved_at" "$stage" "$git_head_for_log" "$note" \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$safe_approved_by" "$safe_approved_at" "$safe_stage" "$git_head_for_log" "$safe_note" \
     >> "$approvals_log"
   ew_log_info "CRITICAL approval appended to durable log: $approvals_log"
 fi

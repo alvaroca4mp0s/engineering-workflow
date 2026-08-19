@@ -7,6 +7,24 @@ design, there is no fallback JSON parser. Install it:
 - macOS: `brew install jq`
 - Debian/Ubuntu: `apt-get install -y jq`
 
+## `install.sh` refuses with "refusing to overwrite ..."
+
+Expected safety behavior: something other than this tool already occupies
+`~/.local/bin/engineering-workflow` — either a real file/directory, or a
+symlink pointing somewhere that isn't a clone's `bin/engineering-workflow`
+(e.g. an unrelated tool that happens to share the name). Installing would
+have clobbered it. Move or remove that path yourself, or set
+`EW_INSTALL_PREFIX` to a different directory, then re-run `install.sh`.
+
+## `uninstall.sh` says "exists but is not managed by this tool"
+
+Same safety behavior in reverse: `uninstall.sh` found something at
+`~/.local/bin/engineering-workflow` that isn't its own symlink (a foreign
+file, or a foreign symlink pointing elsewhere), so it left it in place
+instead of deleting it. This is not an error — `uninstall.sh` still exits
+`0`. If you expected `engineering-workflow` to be gone, check what's
+actually at that path before removing it yourself.
+
 ## `engineering-workflow: command not found` after `install.sh`
 
 `install.sh` never edits your shell rc files. If it printed a warning like:

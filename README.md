@@ -55,11 +55,17 @@ See `docs/INSTALL.md` for the full install/uninstall procedure and
 methodology/   core lifecycle + risk model — agnostic, no agent mentioned
 contract/      the workflow.config.json schema/example a project provides
 adapters/      per-agent glue (claude-code, codex, generic fallback)
+bin/           the `engineering-workflow` dispatcher installed on PATH
 scripts/       deterministic bash tooling: install, doctor, init, handoff
-templates/     HANDOFF.md template
+templates/     HANDOFF.md and .gitignore templates
 tests/         self-contained bash tests, run via tests/run.sh
 docs/          INSTALL / OPERATIONS / MAINTENANCE / PORTABILITY / TROUBLESHOOTING
 ```
+
+This repo is itself governed by the methodology (`AGENTS.md`, `CLAUDE.md`,
+`.engineering-workflow/` at the root) — see `docs/OPERATIONS.md` for what
+those are and why they're safe to ignore if you're just here to read the
+code.
 
 ## Design constraints (why it looks like this)
 

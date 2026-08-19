@@ -25,6 +25,7 @@ sum_config_1=$(checksum "$PROJ/.engineering-workflow/workflow.config.json")
 sum_version_1=$(checksum "$PROJ/.engineering-workflow/VERSION")
 sum_handoff_1=$(checksum "$PROJ/.engineering-workflow/HANDOFF.md")
 sum_gitignore_1=$(checksum "$PROJ/.engineering-workflow/.gitignore")
+sum_methodology_1=$(checksum "$PROJ/.engineering-workflow/methodology/OVERVIEW.md")
 
 out2=$("$REPO_ROOT/scripts/init-project.sh" "$PROJ" 2>&1)
 rc2=$?
@@ -38,6 +39,7 @@ sum_config_2=$(checksum "$PROJ/.engineering-workflow/workflow.config.json")
 sum_version_2=$(checksum "$PROJ/.engineering-workflow/VERSION")
 sum_handoff_2=$(checksum "$PROJ/.engineering-workflow/HANDOFF.md")
 sum_gitignore_2=$(checksum "$PROJ/.engineering-workflow/.gitignore")
+sum_methodology_2=$(checksum "$PROJ/.engineering-workflow/methodology/OVERVIEW.md")
 
 assert_eq "$sum_agents_1" "$sum_agents_2" "AGENTS.md unchanged by second init" || FAILED=1
 assert_eq "$sum_claude_1" "$sum_claude_2" "CLAUDE.md unchanged by second init" || FAILED=1
@@ -45,6 +47,7 @@ assert_eq "$sum_config_1" "$sum_config_2" "workflow.config.json unchanged by sec
 assert_eq "$sum_version_1" "$sum_version_2" "VERSION unchanged by second init" || FAILED=1
 assert_eq "$sum_handoff_1" "$sum_handoff_2" "HANDOFF.md unchanged by second init" || FAILED=1
 assert_eq "$sum_gitignore_1" "$sum_gitignore_2" ".engineering-workflow/.gitignore unchanged by second init" || FAILED=1
+assert_eq "$sum_methodology_1" "$sum_methodology_2" "vendored methodology/OVERVIEW.md unchanged by second init" || FAILED=1
 
 if [ "$FAILED" -eq 0 ]; then
   echo "PASS test_idempotency"

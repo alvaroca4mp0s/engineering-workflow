@@ -79,6 +79,23 @@ else
   ew_log_info "wrote $EW_DIR/VERSION ($EW_VERSION)"
 fi
 
+# --- vendored methodology (OVERVIEW.md, RISK-MODEL.md) ------------------
+# AGENTS.md/CLAUDE.md point here, not at the engineering-workflow clone,
+# so the project stays self-contained: the methodology travels with it in
+# git, readable on a machine where the clone was never installed. Copied
+# once; never overwritten on re-init, so local notes added to these files
+# survive re-running init-project.sh.
+mkdir -p "$EW_DIR/methodology"
+for doc in OVERVIEW.md RISK-MODEL.md; do
+  dest="$EW_DIR/methodology/$doc"
+  if [ -f "$dest" ]; then
+    ew_log_info "methodology/$doc already vendored — left untouched"
+  else
+    cp "$EW_REPO_ROOT/methodology/$doc" "$dest"
+    ew_log_info "vendored methodology/$doc"
+  fi
+done
+
 # --- workflow.config.json -----------------------------------------------
 config_file="$EW_DIR/workflow.config.json"
 if [ -f "$config_file" ]; then

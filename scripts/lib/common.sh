@@ -9,6 +9,14 @@ ew_log_info()  { printf '[ew] %s\n' "$*"; }
 ew_log_warn()  { printf '[ew] WARN: %s\n' "$*" >&2; }
 ew_log_error() { printf '[ew] ERROR: %s\n' "$*" >&2; }
 
+# ew_sanitize_log_field <value> -> prints <value> with newlines and carriage
+# returns collapsed to spaces. Use on any free-text field before writing it
+# into a line-oriented log (e.g. APPROVALS.log), so a caller cannot inject
+# fake extra records by passing a value containing embedded newlines.
+ew_sanitize_log_field() {
+  printf '%s' "$1" | tr '\n\r' '  '
+}
+
 # ew_require_cmd <cmd> <install-hint>
 # Exits 1 if <cmd> is not on PATH.
 ew_require_cmd() {
@@ -75,6 +83,34 @@ ew_ensure_line() {
     [ -n "$last_byte" ] && printf '\n' >> "$file"
   fi
   printf '%s\n' "$line" >> "$file"
+}
+
+# ew_is_own_symlink <path> -> exit 0 if <path> is a symlink whose target
+# looks like one of this tool's dispatcher symlinks, exit 1 otherwise
+# (including if <path> is not a symlink at all, or is a foreign symlink
+# pointing elsewhere). Two checks, both required when the target exists:
+# (1) the stored target path ends in "/bin/engineering-workflow", and
+# (2) the target file actually contains this tool's dispatcher marker —
+# path suffix alone could coincidentally match an unrelated file. Falls
+# back to the path-suffix check alone for a broken symlink (target
+# missing), since there's no file content left to verify.
+ew_is_own_symlink() {
+  path="$1"
+  [ -L "$path" ] || return 1
+  target=$(readlink "$path")
+  case "$target" in
+    */bin/engineering-workflow) : ;;
+    *) return 1 ;;
+  esac
+  case "$target" in
+    /*) resolved="$target" ;;
+    *) resolved="$(dirname "$path")/$target" ;;
+  esac
+  if [ -e "$resolved" ]; then
+    grep -qF "engineering-workflow:dispatcher-marker" "$resolved" 2>/dev/null
+    return $?
+  fi
+  return 0
 }
 
 # ew_backup_file <file> <backup-dir> -> copies <file> into <backup-dir>

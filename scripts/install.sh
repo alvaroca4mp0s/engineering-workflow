@@ -32,9 +32,21 @@ if [ ! -x "$EW_REPO_ROOT/bin/engineering-workflow" ]; then
   exit 1
 fi
 
+link="$EW_INSTALL_PREFIX/engineering-workflow"
+if [ -e "$link" ] && [ ! -L "$link" ]; then
+  ew_log_error "refusing to overwrite $link: it exists and is not a symlink managed by this tool"
+  ew_log_error "  remove it manually, or set EW_INSTALL_PREFIX to install elsewhere"
+  exit 1
+fi
+if [ -L "$link" ] && ! ew_is_own_symlink "$link"; then
+  ew_log_error "refusing to overwrite $link: it is a symlink not managed by this tool (target: $(readlink "$link"))"
+  ew_log_error "  remove it manually, or set EW_INSTALL_PREFIX to install elsewhere"
+  exit 1
+fi
+
 mkdir -p "$EW_INSTALL_PREFIX"
-ln -sf "$EW_REPO_ROOT/bin/engineering-workflow" "$EW_INSTALL_PREFIX/engineering-workflow"
-ew_log_info "linked: $EW_INSTALL_PREFIX/engineering-workflow -> $EW_REPO_ROOT/bin/engineering-workflow"
+ln -sf "$EW_REPO_ROOT/bin/engineering-workflow" "$link"
+ew_log_info "linked: $link -> $EW_REPO_ROOT/bin/engineering-workflow"
 
 mkdir -p "$EW_CONFIG_HOME"
 jq -n \

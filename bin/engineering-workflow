@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# engineering-workflow:dispatcher-marker — checked by ew_is_own_symlink()
+# in scripts/lib/common.sh to confirm a symlink at the install path
+# actually resolves to this tool's own dispatcher, not a foreign file that
+# merely happens to sit under a path ending in bin/engineering-workflow.
 # Dispatcher installed on PATH by scripts/install.sh. Forwards subcommands
 # to the corresponding script in the engineering-workflow clone. This file
 # is a thin convenience wrapper — every subcommand also works by calling

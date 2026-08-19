@@ -23,7 +23,11 @@ cd engineering-workflow
 `install.sh`:
 - Verifies `git` and `jq` are present (hard failure otherwise).
 - Symlinks `~/.local/bin/engineering-workflow` to `bin/engineering-workflow`
-  in this clone.
+  in this clone. If that path already exists as a real file/directory, or
+  as a symlink pointing somewhere that isn't some clone's
+  `bin/engineering-workflow` (i.e. it isn't this tool's), `install.sh`
+  refuses and exits `1` rather than overwrite it — remove the conflicting
+  path manually, or point `EW_INSTALL_PREFIX` elsewhere.
 - Writes `~/.config/engineering-workflow/install.json` recording this
   clone's path and version (used by `doctor.sh` to detect drift).
 - Warns (does not fail, does not edit shell rc files) if
@@ -61,6 +65,10 @@ re-run. Does **not**:
 - touch any project you previously ran `init-project.sh` on — a project's
   `.engineering-workflow/` directory (contract, handoff, approvals log) is
   that project's own state, independent of whether the tool is installed.
+- delete anything at `~/.local/bin/engineering-workflow` that isn't
+  recognizably this tool's own symlink (a foreign file, or a symlink
+  pointing somewhere that isn't a clone's `bin/engineering-workflow`) — 
+  it's left in place with a warning, never removed.
 
 ## Environment overrides (used mainly by the test suite)
 

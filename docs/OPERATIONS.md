@@ -16,6 +16,12 @@ first if it isn't — this tool never creates a git repo on your behalf).
 What it creates, if not already present:
 
 - `.engineering-workflow/VERSION` — the vendored methodology version
+- `.engineering-workflow/methodology/OVERVIEW.md` and `RISK-MODEL.md` —
+  a vendored copy of the core methodology docs, so the project is
+  actually self-contained: readable and followable on a machine where
+  `engineering-workflow` was never cloned. `AGENTS.md`/`CLAUDE.md` point
+  here, not at an external clone path. Copied once; never overwritten on
+  re-init.
 - `.engineering-workflow/workflow.config.json` — the project contract
   (edit `commands.verify`/`test`/`build` before relying on VERIFY — the
   generated file ships with `REPLACE_ME` placeholders on purpose)
@@ -138,7 +144,11 @@ A CRITICAL-risk `generate-handoff.sh` call without `--approved-by` exits
 truncate this file; it is the durable record, not `HANDOFF.md`) before
 writing the (still disposable) `HANDOFF.md`. A commit trailer
 (`Approved-by: ...`) is an acceptable complement or alternative for
-projects that prefer that convention.
+projects that prefer that convention. **`--approved-by` is free text, not
+an authenticated identity** — it records accountability (like a git
+commit's author field), not cryptographic proof that a human approved the
+change. For CRITICAL work where that distinction matters, pair it with a
+real approval channel your team already trusts.
 
 LOW/MEDIUM/HIGH review depth (self-review vs. independent review vs.
 adversarial review) is a documented convention in `RISK-MODEL.md` and the

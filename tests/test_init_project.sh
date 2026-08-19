@@ -44,6 +44,16 @@ assert_contains "$PROJ/CLAUDE.md" "engineering-workflow:managed" || FAILED=1
 assert_file_exists "$PROJ/.engineering-workflow/HANDOFF.md" || FAILED=1
 assert_contains "$PROJ/.engineering-workflow/HANDOFF.md" "Stage: init" || FAILED=1
 
+# the project must be self-contained: methodology is vendored, not just
+# referenced by an unfilled placeholder pointing outside the project
+assert_file_exists "$PROJ/.engineering-workflow/methodology/OVERVIEW.md" || FAILED=1
+assert_file_exists "$PROJ/.engineering-workflow/methodology/RISK-MODEL.md" || FAILED=1
+assert_eq "$(cat "$REPO_ROOT/methodology/OVERVIEW.md")" "$(cat "$PROJ/.engineering-workflow/methodology/OVERVIEW.md")" "vendored OVERVIEW.md matches clone" || FAILED=1
+assert_not_contains "$PROJ/AGENTS.md" "<path to engineering-workflow clone>" || FAILED=1
+assert_contains "$PROJ/AGENTS.md" ".engineering-workflow/methodology/OVERVIEW.md" || FAILED=1
+assert_not_contains "$PROJ/CLAUDE.md" "<path to engineering-workflow clone>" || FAILED=1
+assert_contains "$PROJ/CLAUDE.md" ".engineering-workflow/methodology/OVERVIEW.md" || FAILED=1
+
 if [ "$FAILED" -eq 0 ]; then
   echo "PASS test_init_project"
 else

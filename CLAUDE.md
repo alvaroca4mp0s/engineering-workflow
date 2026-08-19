@@ -18,11 +18,16 @@ any work, read, in this order:
 
 Lifecycle: DISCOVER → SHAPE → SPEC → IMPLEMENT → VERIFY → REVIEW → DOCUMENT
 → HANDOFF/COMMIT. Full definition:
-`<path to engineering-workflow clone>/methodology/OVERVIEW.md`.
+`.engineering-workflow/methodology/OVERVIEW.md` (vendored into this
+project — no external clone needed to read it).
 
-Risk gates (see `methodology/RISK-MODEL.md`): LOW → verify. MEDIUM → verify
-+ review. HIGH → verify + independent review. CRITICAL → verify +
-independent review + durable human approval.
+Risk gates (see `.engineering-workflow/methodology/RISK-MODEL.md`): LOW →
+verify. MEDIUM → verify + review. HIGH → verify + independent review.
+CRITICAL → verify + independent review + `--approved-by` recorded in
+`.engineering-workflow/APPROVALS.log`. That flag is an accountability
+record, not a cryptographic proof — it only means someone typed a name;
+pair it with an actual human sign-off through whatever channel your team
+already trusts for real CRITICAL work.
 
 If the `codex` plugin (codex-plugin-cc) is installed, `/codex:review` and
 `/codex:adversarial-review` MAY be used as the independent-review step for

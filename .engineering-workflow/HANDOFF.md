@@ -9,25 +9,42 @@
 
 # Handoff
 
-- Generated at: 2026-08-19T15:35:35Z
-- Stage: document
+- Generated at: 2026-08-19T16:46:44Z
+- Stage: handoff
 - Risk: LOW
 - Git branch: main
-- Git HEAD: 758e66d
+- Git HEAD: 19bd96a
 
 ## Note
 
-Fixed two risks found during self-dogfooding: (1) GitHub repo was public, contradicting the approved 'private' decision -- corrected to private via gh. (2) .engineering-workflow/backups/ and proposals/ had no retention policy and would grow unbounded if committed -- fixed at the source in init-project.sh, which now creates a .gitignore scoped to .engineering-workflow/ (never touching the project's own root .gitignore). Verified: backups/ confirmed excluded via git check-ignore, full test suite green (7/7), self-init idempotent. Ready to commit this fix + the self-hosting artifacts (AGENTS.md, CLAUDE.md, .engineering-workflow/{VERSION,workflow.config.json,HANDOFF.md,.gitignore}).
+BET 1 CLOSED. VERSION v0.1.0. READY_TO_RELEASE. Version decision: v0.1.0 stays as-is -- it was never tagged/released before this closure, so all dogfooding/review/adversarial-review fixes are part of stabilizing the first release, not a post-release bump. Final state: 8/8 tests passing, Codex review clean, adversarial review verdict=approve with no material findings across 3 rounds. Next: tag v0.1.0 and push. No functional changes after this point -- release closure only.
 
 ## Git status at generation time
 
 ```
+ M .engineering-workflow/HANDOFF.md
+ M AGENTS.md
+ M CLAUDE.md
+ M README.md
+ M adapters/claude-code/CLAUDE.md.template
+ M adapters/codex/AGENTS.md.template
+ M bin/engineering-workflow
+ M docs/INSTALL.md
  M docs/OPERATIONS.md
+ M docs/PORTABILITY.md
+ M docs/TROUBLESHOOTING.md
+ M methodology/OVERVIEW.md
+ M methodology/RISK-MODEL.md
+ M scripts/handoff/generate-handoff.sh
  M scripts/init-project.sh
+ M scripts/install.sh
+ M scripts/lib/common.sh
+ M scripts/uninstall.sh
+ M tests/test_handoff_cycle.sh
  M tests/test_idempotency.sh
  M tests/test_init_project.sh
-?? .engineering-workflow/
-?? AGENTS.md
-?? CLAUDE.md
-?? templates/EW-GITIGNORE.template
+ M tests/test_install.sh
+ M tests/test_uninstall.sh
+?? .engineering-workflow/methodology/
+?? docs/ENGINEERING-WORKFLOW-HANDBOOK.md
 ```

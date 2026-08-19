@@ -40,13 +40,16 @@ no `mapfile`/`readarray`, no `[[ -v ... ]]`.
 
 ## Vendoring model
 
-`init-project.sh` **copies** the contract and templates into the target
-project's `.engineering-workflow/` directory — it does not symlink to the
-`engineering-workflow` clone. Consequences:
+`init-project.sh` **copies** the contract, the core methodology docs
+(`methodology/OVERVIEW.md`, `RISK-MODEL.md`), and the rendered adapter
+templates into the target project's `.engineering-workflow/` directory and
+root — it does not symlink to the `engineering-workflow` clone, and
+`AGENTS.md`/`CLAUDE.md` reference the vendored copy, not the clone.
+Consequences:
 
-- A project keeps working (contract, handoff, approvals log all readable)
-  even on a machine where `engineering-workflow` was never cloned — only
-  `init`/`doctor`/upgrade tooling requires the clone.
+- A project keeps working (contract, methodology, handoff, approvals log
+  all readable) even on a machine where `engineering-workflow` was never
+  cloned — only `init`/`doctor`/upgrade tooling requires the clone.
 - Moving a project to a new machine, or handing it to a different agent,
   never requires copying prompts or config by hand — everything the
   methodology needs travels with the project's own git history.

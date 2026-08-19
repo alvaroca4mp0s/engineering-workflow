@@ -17,10 +17,12 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 link="$EW_INSTALL_PREFIX/engineering-workflow"
 did_something=0
 
-if [ -L "$link" ] || [ -e "$link" ]; then
+if [ -L "$link" ] && ew_is_own_symlink "$link"; then
   rm -f "$link"
   ew_log_info "removed $link"
   did_something=1
+elif [ -e "$link" ] || [ -L "$link" ]; then
+  ew_log_warn "$link exists but is not managed by this tool — left untouched"
 else
   ew_log_info "$link not present — nothing to remove"
 fi
