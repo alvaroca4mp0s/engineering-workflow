@@ -12,6 +12,29 @@ can read markdown and run shell commands. See `methodology/OVERVIEW.md` for
 the full lifecycle and principles, and `methodology/RISK-MODEL.md` for the
 risk-based review gates.
 
+`engineering-workflow` provides a small operational framework for developing
+software with AI coding agents without making the project dependent on the
+memory, context, or lifecycle of any particular agent.
+
+> Durable project state belongs in the repository, not in the agent
+> conversation.
+
+## Why
+
+Working with coding agents surfaces a recurring set of problems this
+methodology exists to answer:
+
+- An agent hits its context or session limit mid-task — another agent (or
+  the same one, later) has to continue.
+- A conversation is not durable state. When it ends, whatever wasn't
+  written to the repository is gone.
+- An LLM saying "PASS" is not verification.
+- A passing test suite is not proof that the architecture is correct.
+- Not every change deserves the same scrutiny — review depth should scale
+  with risk, not be uniform ceremony.
+- The agent or vendor you use today should be replaceable by a different
+  one tomorrow, without rebuilding context by hand.
+
 ## Status
 
 **v0.1.0 — core only.** This is BET 1 of the implementation: the minimal
@@ -20,15 +43,92 @@ uninstall`). No upgrades, no `gh` integration, no deep OpenSpec scaffolding,
 no per-stage skills yet. See `docs/MAINTENANCE.md` for what's deliberately
 out of scope for now.
 
+## Workflow
+
+```
+DISCOVER
+   ↓
+SHAPE
+   ↓
+SPEC
+   ↓
+IMPLEMENT
+   ↓
+VERIFY
+   ↓
+REVIEW
+   ↓
+DOCUMENT
+   ↓
+HANDOFF / COMMIT
+```
+
+- **DISCOVER** — understand the current state before proposing changes.
+- **SHAPE** — turn an ambiguous request into a bounded proposal.
+- **SPEC** — write down what will change and why (OpenSpec or plain prose; optional).
+- **IMPLEMENT** — make the change.
+- **VERIFY** — run the project's own declared command; check its exit code.
+- **REVIEW** — assess the change at a depth proportional to its risk.
+- **DOCUMENT** — update whatever durable docs the change affects.
+- **HANDOFF / COMMIT** — persist the change in git; hand off what's incomplete.
+
+Full definition: `methodology/OVERVIEW.md`.
+
+## Verify is not Review
+
+Three different questions, easy to conflate:
+
+- **VERIFY** — Does the implementation demonstrably work?
+- **REVIEW** — What defects may still exist?
+- **ADVERSARIAL REVIEW** — Are the solution and its assumptions actually correct?
+
+A passing test suite is evidence about tested behavior. It is not proof
+that the architecture, assumptions, or specification are correct.
+
+## Core principle
+
+```
+SPEC + GIT + TESTS + DOCS + HANDOFF
+                 >
+             AGENT MEMORY
+```
+
+Agent memory is not authoritative. Repository artifacts — not a
+conversation — provide continuity across sessions, agents, and machines.
+Agent-specific transfers (like Claude Code handing a session to Codex) are
+accelerators when available; they are never the durable mechanism itself.
+
+## Risk-aware review
+
+```
+LOW
+  → verify
+
+MEDIUM
+  → verify + review
+
+HIGH
+  → verify + independent/deeper review
+
+CRITICAL
+  → verify + adversarial review + explicit human approval
+```
+
+The goal is proportional rigor, not ceremony for its own sake. In v0.1.0,
+only the CRITICAL gate is mechanically enforced (a CRITICAL handoff refuses
+to write without `--approved-by`, recorded durably outside `HANDOFF.md`).
+LOW/MEDIUM/HIGH review depth is a documented convention, not yet
+script-enforced. Full table and rules: `methodology/RISK-MODEL.md`.
+
 ## Requirements
 
 - `bash` (3.2+, the version macOS ships by default — nothing here needs bash 4+)
 - `git`
 - `jq` — **required**, not optional. macOS: `brew install jq`. Debian/Ubuntu: `apt-get install -y jq`.
 
-Everything else (a coding agent, OpenSpec, `codex-plugin-cc`) is optional.
-`doctor.sh` tells you what's present without ever failing because an
-optional capability is missing.
+Everything else — Claude Code, Codex, OpenSpec, `codex-plugin-cc` — is
+optional. `doctor.sh` tells you what's present without ever failing
+because an optional capability is missing.
 
 ## Quick start
 
@@ -39,15 +139,30 @@ cd engineering-workflow
 ./scripts/doctor.sh
 ```
 
-Then, inside any git repository you want to use the methodology on:
+See `docs/INSTALL.md` for the full install/uninstall procedure. To use it
+on a project, see **Starting a new project** below.
+
+## Starting a new project
 
 ```bash
-engineering-workflow init /path/to/your/project
-# or, without installing: <this-repo>/scripts/init-project.sh /path/to/your/project
+git init
+engineering-workflow init .
 ```
 
-See `docs/INSTALL.md` for the full install/uninstall procedure and
-`docs/OPERATIONS.md` for day-to-day usage (handoff, risk gates, approvals).
+Then, as an opening message to whichever agent you're working with:
+
+> I want to build \<idea\>.
+>
+> Use engineering-workflow.
+>
+> Start with DISCOVER. Do not implement yet.
+
+This is a plain conversational opener, not a special command — it works
+because `AGENTS.md`/`CLAUDE.md` (generated by `init`) already tell the
+agent to read the contract, the spec if any, git history, and any handoff
+before doing anything else. For OpenSpec usage, risk gates, and the full
+handoff protocol, see `docs/ENGINEERING-WORKFLOW-HANDBOOK.md` and
+`docs/OPERATIONS.md`.
 
 ## Layout
 
@@ -59,18 +174,37 @@ bin/           the `engineering-workflow` dispatcher installed on PATH
 scripts/       deterministic bash tooling: install, doctor, init, handoff
 templates/     HANDOFF.md and .gitignore templates
 tests/         self-contained bash tests, run via tests/run.sh
-docs/          INSTALL / OPERATIONS / MAINTENANCE / PORTABILITY / TROUBLESHOOTING
+docs/          INSTALL / OPERATIONS / MAINTENANCE / PORTABILITY / TROUBLESHOOTING / ENGINEERING-WORKFLOW-HANDBOOK
 ```
 
 This repo is itself governed by the methodology (`AGENTS.md`, `CLAUDE.md`,
-`.engineering-workflow/` at the root) — see `docs/OPERATIONS.md` for what
-those are and why they're safe to ignore if you're just here to read the
-code.
+`.engineering-workflow/` at the root) — safe to ignore if you're just here
+to read the code. See **Dogfooding** below for what that's actually used for.
+
+## Dogfooding
+
+`engineering-workflow` is developed using `engineering-workflow`. BET 1's
+closure ran through this validated cycle repeatedly:
+
+```
+REVIEW FINDING ACCEPTED
+        ↓
+    IMPLEMENT
+        ↓
+     VERIFY
+        ↓
+   RE-REVIEW
+```
+
+This isn't a marketing claim — it's the actual validation practice: every
+accepted finding from self-review, `/codex:review`, or
+`/codex:adversarial-review` during this project's own development went
+through exactly this loop before being considered resolved.
 
 ## Design constraints (why it looks like this)
 
-- Durable state lives in the target project's repository, never in an
-  agent's memory or in this tool's own state.
+- Durable state lives in the target project's repository — see **Core
+  principle** above.
 - `HANDOFF.md` is disposable. Durable approvals (e.g. for CRITICAL-risk
   work) are written to a separate, append-only file
   (`.engineering-workflow/APPROVALS.log`), never only to `HANDOFF.md`.
@@ -78,6 +212,73 @@ code.
   automatically. If one already exists and isn't ours, `init-project.sh`
   backs it up, writes a separate proposal, and stops with an explicit
   conflict (exit code 2) — see `docs/OPERATIONS.md`.
-- Every project vendors its own copy of the contract
+- Every project vendors its own copy of the contract and methodology
   (`.engineering-workflow/`), so it stays usable even on a machine where
   this repo isn't cloned.
+
+## Current limitations
+
+- v0.1.0 is early and experimental.
+- **macOS has been empirically validated.** Ubuntu Desktop and Ubuntu
+  Server are design targets (bash 3.2-safe, no Node/Python required) but
+  still need real-machine portability validation — see `docs/PORTABILITY.md`.
+- Other deferred capabilities (upgrade automation, `gh` integration, deep
+  OpenSpec orchestration, per-stage skills, mechanical LOW/MEDIUM/HIGH
+  enforcement) are documented in `docs/MAINTENANCE.md`.
+
+## Language
+
+### Why is the project written primarily in English?
+
+This is intentional.
+
+Much of the vocabulary used in software engineering, AI-assisted
+development, and coding-agent workflows has no widely accepted Spanish
+equivalent, or loses precision when translated. Examples include:
+
+- dogfooding
+- handoff
+- rollback
+- review gate
+- runtime
+- tooling
+- workflow
+
+The project comes from a Spanish-speaking context, but preserves English
+technical terminology when that improves precision, compatibility with
+the tools involved, and consistency with the broader engineering
+ecosystem. Discussion and contributions in either English or Spanish are
+welcome.
+
+## Philosophy
+
+`engineering-workflow` is not intended to become another large
+development framework.
+
+Priorities: **simple · explicit · portable · versioned · testable · agent-agnostic**
+
+The methodology should help build software. If operating the methodology
+costs more than the risk it controls, the methodology is being used
+incorrectly.
+
+## Contributing
+
+This is an early project. Especially valuable right now:
+
+- bug reports
+- criticism
+- real-world dogfooding
+- tests on different operating systems
+- different coding agents
+- real handoffs between tools
+
+## Documentation
+
+- `docs/ENGINEERING-WORKFLOW-HANDBOOK.md` — the full manual (LEARN / OPERATE / MAINTAIN)
+- `docs/INSTALL.md` — install/uninstall procedure
+- `docs/OPERATIONS.md` — day-to-day usage: init, handoff, risk gates, approvals
+- `docs/MAINTENANCE.md` — versioning, upgrades, what's out of scope
+- `docs/PORTABILITY.md` — OS support and dependency policy
+- `docs/TROUBLESHOOTING.md` — common issues
+- `methodology/OVERVIEW.md` — full lifecycle and principles
+- `methodology/RISK-MODEL.md` — risk table, gates, and finding-handling protocol
