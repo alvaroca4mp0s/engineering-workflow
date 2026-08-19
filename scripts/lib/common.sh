@@ -57,6 +57,26 @@ ew_has_marker() {
   grep -qF "$EW_MARKER_PREFIX" "$file" 2>/dev/null
 }
 
+# ew_ensure_line <file> <line> -> ensures <line> is present in <file> as
+# an exact line (grep -xF match). Appends it if missing; no-op (and no
+# duplicate) if already present. Preserves all existing content and
+# ordering. Creates <file> (and its parent dir) if it does not exist.
+# Ensures the file ends with a newline before appending, so the new line
+# never gets concatenated onto an existing last line.
+ew_ensure_line() {
+  file="$1"
+  line="$2"
+  if [ -f "$file" ] && grep -qxF "$line" "$file" 2>/dev/null; then
+    return 0
+  fi
+  mkdir -p "$(dirname "$file")"
+  if [ -f "$file" ] && [ -s "$file" ]; then
+    last_byte=$(tail -c 1 "$file")
+    [ -n "$last_byte" ] && printf '\n' >> "$file"
+  fi
+  printf '%s\n' "$line" >> "$file"
+}
+
 # ew_backup_file <file> <backup-dir> -> copies <file> into <backup-dir>
 # with a timestamp suffix. No-op if <file> does not exist.
 ew_backup_file() {

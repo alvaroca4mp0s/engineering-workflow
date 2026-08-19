@@ -19,9 +19,35 @@ What it creates, if not already present:
 - `.engineering-workflow/workflow.config.json` — the project contract
   (edit `commands.verify`/`test`/`build` before relying on VERIFY — the
   generated file ships with `REPLACE_ME` placeholders on purpose)
+- `.engineering-workflow/.gitignore` — scoped to `.engineering-workflow/`
+  only, ignores `backups/` and `proposals/` (see below). Never touches the
+  project's own root `.gitignore`. If this file already exists (ours or
+  foreign), its content is preserved as-is and `init-project.sh` only
+  appends whichever of `backups/`/`proposals/` is missing (exact-line
+  match) — idempotent, never duplicates an entry already present.
 - `AGENTS.md` — Codex-facing instructions
 - `CLAUDE.md` — Claude Code-facing instructions
 - `.engineering-workflow/HANDOFF.md` — an initial handoff note
+
+### What's tracked in git, and what isn't
+
+`VERSION`, `workflow.config.json`, and `HANDOFF.md` are meant to be
+committed — the handoff protocol (see `OVERVIEW.md` principle 9) relies on
+git as the transport between machines/agents, so `HANDOFF.md` being
+disposable means its *content* is never authoritative, not that it should
+be kept out of version control.
+
+`backups/` and `proposals/` are different: they exist purely as a local
+safety net for `init-project.sh` conflict handling and for
+`generate-handoff.sh`'s pre-overwrite backup of the previous `HANDOFF.md`.
+They have no retention/rotation policy in this version, so committing them
+means unbounded growth over time. `init-project.sh` scopes a `.gitignore`
+to `.engineering-workflow/` itself (never touching the project's own root
+`.gitignore`) so these two directories are excluded by default — and this
+is guaranteed idempotently: even if that scoped `.gitignore` already
+exists (e.g. from an older `engineering-workflow` version, or hand-edited)
+and is missing one or both entries, re-running `init-project.sh` adds only
+what's missing, without touching any other line in the file.
 
 ### Conflicts (existing `AGENTS.md` / `CLAUDE.md`)
 

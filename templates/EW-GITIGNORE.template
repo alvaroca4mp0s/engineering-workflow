@@ -1,0 +1,9 @@
+# engineering-workflow: local safety-net artifacts.
+# backups/ and proposals/ exist to protect files during init-project.sh
+# conflict handling and handoff regeneration. They have no retention
+# policy (no rotation/pruning in this version) and are not meant to be
+# shared or accumulated in git history — hence ignored here, in a
+# .gitignore scoped to .engineering-workflow/ only, so it never touches
+# the project's own root .gitignore.
+backups/
+proposals/

@@ -38,6 +38,33 @@ mkdir -p "$EW_DIR/backups" "$EW_DIR/proposals"
 
 ew_log_info "target: $TARGET"
 
+# --- .gitignore (scoped to .engineering-workflow/, never touches the
+#     project's own root .gitignore) — keeps backups/ and proposals/,
+#     which have no retention policy, out of git history. If the file
+#     doesn't exist yet, it's created from the template. If it already
+#     exists (ours or foreign), existing content is preserved as-is and
+#     only the required entries missing from it (exact-line match) are
+#     appended — never duplicated, never reordered. ----------------------
+gitignore_file="$EW_DIR/.gitignore"
+if [ ! -f "$gitignore_file" ]; then
+  cp "$EW_REPO_ROOT/templates/EW-GITIGNORE.template" "$gitignore_file"
+  ew_log_info "created $gitignore_file (ignores backups/ and proposals/)"
+else
+  gitignore_added=0
+  for gitignore_entry in "backups/" "proposals/"; do
+    if grep -qxF "$gitignore_entry" "$gitignore_file" 2>/dev/null; then
+      : # already present, leave as-is
+    else
+      ew_ensure_line "$gitignore_file" "$gitignore_entry"
+      ew_log_info "added missing entry to $gitignore_file: $gitignore_entry"
+      gitignore_added=$((gitignore_added + 1))
+    fi
+  done
+  if [ "$gitignore_added" -eq 0 ]; then
+    ew_log_info "$gitignore_file already has required entries — left untouched"
+  fi
+fi
+
 # --- VERSION -----------------------------------------------------------
 if [ -f "$EW_DIR/VERSION" ]; then
   existing_version=$(cat "$EW_DIR/VERSION")

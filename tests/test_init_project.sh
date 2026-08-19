@@ -26,6 +26,10 @@ assert_eq 0 "$rc" "init-project.sh exit code on clean project" || FAILED=1
 assert_file_exists "$PROJ/.engineering-workflow/VERSION" || FAILED=1
 assert_eq "$(cat "$REPO_ROOT/VERSION")" "$(cat "$PROJ/.engineering-workflow/VERSION")" "vendored VERSION matches clone" || FAILED=1
 
+assert_file_exists "$PROJ/.engineering-workflow/.gitignore" || FAILED=1
+assert_contains "$PROJ/.engineering-workflow/.gitignore" "backups/" || FAILED=1
+assert_contains "$PROJ/.engineering-workflow/.gitignore" "proposals/" || FAILED=1
+
 assert_file_exists "$PROJ/.engineering-workflow/workflow.config.json" || FAILED=1
 jq empty "$PROJ/.engineering-workflow/workflow.config.json" 2>/dev/null
 assert_eq 0 $? "workflow.config.json is valid JSON" || FAILED=1

@@ -1,0 +1,19 @@
+{
+  "contract_version": "1",
+  "project_name": "engineering-workflow",
+  "commands": {
+    "verify": "./tests/run.sh",
+    "test": "./tests/run.sh",
+    "build": "bash -n bin/engineering-workflow scripts/*.sh scripts/handoff/*.sh scripts/lib/*.sh tests/*.sh tests/lib/*.sh"
+  },
+  "risk": {
+    "default": "MEDIUM"
+  },
+  "spec_tool": {
+    "type": "none",
+    "path": "openspec"
+  },
+  "handoff": {
+    "path": ".engineering-workflow/HANDOFF.md"
+  }
+}
