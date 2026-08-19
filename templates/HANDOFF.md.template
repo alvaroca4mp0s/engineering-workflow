@@ -1,0 +1,26 @@
+<!-- engineering-workflow:handoff v__EW_VERSION__ -->
+<!--
+  THIS FILE IS DISPOSABLE. It is a temporary operational artifact, not a
+  durable source of truth. Durable decisions belong in ADRs/docs. Durable
+  approvals belong in .engineering-workflow/APPROVALS.log (or a commit
+  trailer), never only here. This file may be regenerated or discarded at
+  any time — see methodology/OVERVIEW.md principle 7.
+-->
+
+# Handoff
+
+- Generated at: __GENERATED_AT__
+- Stage: __STAGE__
+- Risk: __RISK__
+- Git branch: __GIT_BRANCH__
+- Git HEAD: __GIT_HEAD__
+
+## Note
+
+__NOTE__
+
+## Git status at generation time
+
+```
+__GIT_STATUS__
+```

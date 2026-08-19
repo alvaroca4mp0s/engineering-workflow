@@ -1,0 +1,19 @@
+{
+  "contract_version": "1",
+  "project_name": "REPLACE_ME",
+  "commands": {
+    "verify": "REPLACE_ME (e.g. make verify, npm test, pytest)",
+    "test": "REPLACE_ME (e.g. npm test, pytest -q)",
+    "build": "REPLACE_ME (e.g. make build, npm run build)"
+  },
+  "risk": {
+    "default": "MEDIUM"
+  },
+  "spec_tool": {
+    "type": "none",
+    "path": "openspec"
+  },
+  "handoff": {
+    "path": ".engineering-workflow/HANDOFF.md"
+  }
+}

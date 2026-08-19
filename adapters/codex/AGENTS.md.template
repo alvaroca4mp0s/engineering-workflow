@@ -1,0 +1,29 @@
+<!-- engineering-workflow:managed v__EW_VERSION__ -->
+# Agent Instructions
+
+This project follows the `engineering-workflow` methodology. Before doing
+any work, read, in this order:
+
+1. `.engineering-workflow/workflow.config.json` — the project contract:
+   verify/test/build commands, default risk level, spec tool in use.
+2. `openspec/` (if `spec_tool.type` is `openspec` in the contract) — the
+   current specification of work.
+3. `git log` and `git status` — what has already changed.
+4. The project's own test/verify output — never assume tests pass without
+   running the command declared in the contract.
+5. `.engineering-workflow/HANDOFF.md`, if present — a **disposable**
+   operational note from a previous session. It accelerates continuity but
+   is never a durable source of truth; if it conflicts with git/tests/docs,
+   those win.
+
+Lifecycle: DISCOVER → SHAPE → SPEC → IMPLEMENT → VERIFY → REVIEW → DOCUMENT
+→ HANDOFF/COMMIT. Full definition:
+`<path to engineering-workflow clone>/methodology/OVERVIEW.md`.
+
+Risk gates (see `methodology/RISK-MODEL.md`): LOW → verify. MEDIUM → verify
++ review. HIGH → verify + independent review. CRITICAL → verify +
+independent review + durable human approval (never satisfied by an agent
+alone, never recorded only in `HANDOFF.md`).
+
+Before ending a session with incomplete work, update
+`.engineering-workflow/HANDOFF.md` with current state and next steps.
