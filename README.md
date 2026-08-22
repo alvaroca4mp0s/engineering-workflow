@@ -219,9 +219,11 @@ through exactly this loop before being considered resolved.
 ## Current limitations
 
 - v0.1.0 is early and experimental.
-- **macOS has been empirically validated.** Ubuntu Desktop and Ubuntu
-  Server are design targets (bash 3.2-safe, no Node/Python required) but
-  still need real-machine portability validation — see `docs/PORTABILITY.md`.
+- **macOS and Ubuntu Server 24.04.4 LTS (x86_64) have been empirically
+  validated** (the latter by BET 2: bash 5.2.21, git 2.43.0, jq 1.7,
+  kernel 6.8). Ubuntu Desktop remains a design target not yet
+  independently validated — see `docs/PORTABILITY.md` for the
+  authoritative portability record.
 - Other deferred capabilities (upgrade automation, `gh` integration, deep
   OpenSpec orchestration, per-stage skills, mechanical LOW/MEDIUM/HIGH
   enforcement) are documented in `docs/MAINTENANCE.md`.
