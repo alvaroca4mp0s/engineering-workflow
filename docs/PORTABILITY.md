@@ -3,8 +3,9 @@
 ## Target platforms
 
 - macOS (tested: macOS 26, Apple Silicon, default `/bin/bash` 3.2.57)
-- Ubuntu Desktop
-- Ubuntu Server (including minimal images without a desktop environment)
+- Ubuntu Desktop (not yet independently validated — see below)
+- Ubuntu Server — validated on 24.04.4 LTS, x86_64
+  (bash 5.2.21, git 2.43.0, jq 1.7, kernel 6.8), BET 2
 
 The methodology's *content* (`methodology/`, `contract/`, `adapters/`) is
 identical on every platform — there are no OS-specific branches in it.
@@ -57,10 +58,21 @@ Consequences:
   re-init/upgrade per project (see `docs/MAINTENANCE.md`) — nothing is
   shared automatically across projects on the same machine.
 
-## What is NOT yet verified
+## Empirical validation status
 
-This bet (BET 1) was built and tested only on macOS. The scripts avoid
-macOS-specific tools (no `plutil`, no `pbcopy`, no BSD-only flags beyond
-what's covered by POSIX/GNU-compatible usage), but an actual run on Ubuntu
-Desktop/Server has not been performed yet — see `NEXT BET` in the BET 1
-report for the plan to close that gap.
+- **macOS**: built and tested during BET 1 (macOS 26, Apple Silicon,
+  bash 3.2.57).
+- **Ubuntu Server 24.04.4 LTS (x86_64)**: validated in BET 2 — full core
+  path (`install → doctor → init-project → operate → handoff →
+  uninstall`), through both the direct-from-clone scripts and the
+  installed dispatcher symlink, plus the deterministic suite (8/8). No
+  Ubuntu-specific change and no dependency beyond the declared `bash`,
+  `git`, `jq` was required. The scripts also assume a standard
+  POSIX/coreutils userland (`date`, `tr`, `tail`, `readlink`, `mktemp`,
+  etc.) — an environmental assumption present on any base macOS or Ubuntu
+  image, not an additional hard dependency to install. Baseline: bash
+  5.2.21, git 2.43.0, jq 1.7, kernel 6.8.
+
+Still unverified (candidates for a future bet):
+- Ubuntu on **arm64** (userland-difference risk is highest here).
+- **Ubuntu Desktop** specifically (Server was the validated target).
