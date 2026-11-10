@@ -9,18 +9,27 @@
 
 # Handoff
 
-- Generated at: 2026-08-22T20:34:03Z
+- Generated at: 2026-11-10T21:45:01Z
 - Stage: handoff
-- Risk: MEDIUM
-- Git branch: main
-- Git HEAD: ceac779
+- Risk: HIGH
+- Git branch: feat/ew-gov-01a
+- Git HEAD: 8931ead
 
 ## Note
 
-BET 2 CLOSED and PUSHED. Ubuntu portability validated on Ubuntu Server 24.04.4 LTS x86_64 (bash 5.2.21, git 2.43, jq 1.7, kernel 6.8). Full core path + installed dispatcher + 8/8 suite, zero code changes. Review: PASS (claim-precision only). Commit ceac779 on origin/main (local in sync). VERIFY green. Not yet verified: arm64, Ubuntu Desktop. Next candidate bet: arm64/Desktop coverage.
+EW-GOV-01A CLOSED (Stage: handoff, Risk: HIGH). Independent QA review completed: CLEAN REVIEW (0 ACCEPT, 0 HUMAN DECISION, 1 minor observational REJECT on init-project exit-code summary in docs/OPERATIONS.md already covered by the contract section). VERIFY green: ./tests/run.sh 10/10 PASS (8 baseline + test_contract_validation.sh + test_handoff_controls.sh), bash -n build check exit 0, git diff --check exit 0 on Bash 3.2.57 / Git 2.54.0 / jq 1.7.1. stash@{0} (INFORME.md) preserved untouched. Ready for next instruction (merge/push or EW-GOV-01B).
 
 ## Git status at generation time
 
 ```
-(clean)
+ M .engineering-workflow/HANDOFF.md
+ M docs/ENGINEERING-WORKFLOW-HANDBOOK.md
+ M docs/MAINTENANCE.md
+ M docs/OPERATIONS.md
+ M scripts/handoff/generate-handoff.sh
+ M scripts/handoff/read-handoff.sh
+ M scripts/init-project.sh
+ M scripts/lib/common.sh
+?? tests/test_contract_validation.sh
+?? tests/test_handoff_controls.sh
 ```

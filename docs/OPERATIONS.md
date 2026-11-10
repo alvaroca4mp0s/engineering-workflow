@@ -105,6 +105,18 @@ the only place project-specific commands live — nothing in
 `engineering-workflow` itself hardcodes a build/test/verify command for
 any language or framework.
 
+`init-project.sh` (for an existing contract) and `generate-handoff.sh`
+validate the version-1 structure with jq and exit `1` on invalid input,
+without overwriting the contract or updating the handoff/approval record.
+The input must be exactly one JSON object with `contract_version: "1"`;
+all fields shown above are required. `project_name`, each command, and
+both paths must be non-whitespace strings. `risk.default` must be
+`LOW`, `MEDIUM`, `HIGH`, or `CRITICAL`; `spec_tool.type` must be `none` or
+`openspec`. Unknown keys are allowed for project extensions. This checks
+structure, not command correctness, path safety, or completed verification;
+it never executes commands. Template placeholder commands remain valid
+structurally and must still be replaced by the project.
+
 ## Handoff
 
 `HANDOFF.md` is a **disposable** operational artifact (see
@@ -123,6 +135,24 @@ Each `generate-handoff.sh` call backs up the previous `HANDOFF.md` (to
 `.engineering-workflow/backups/`) before overwriting it, and stamps in the
 current git branch, HEAD, and `git status --short` output automatically.
 
+Omitting `--risk` uses the validated contract's `risk.default`; an explicit
+`--risk` overrides it (an explicit empty value is invalid). A missing or
+invalid contract is an error even with an override. `--stage` accepts
+`discover`, `shape`, `spec`, `implement`, `verify`, `review`, `document`,
+`handoff`, and `commit`, plus the compatibility values `init` and
+`unspecified` (the default). Case is normalized to lowercase. Arbitrary
+free-form stages are now rejected intentionally; stages are labels, not a
+state machine or proof of a completed gate. The lifecycle is unchanged.
+The scripts continue to use `.engineering-workflow/HANDOFF.md`; this change
+does not introduce custom-path routing via `handoff.path`.
+
+`read-handoff.sh` compares the recorded HEAD with current Git HEAD and
+warns on stderr if they differ (including an unresolvable recorded commit).
+It still prints the handoff and exits successfully. Short and full hashes
+of the same commit compare equal. Legacy handoffs without HEAD metadata
+remain readable without a comparison; dirty working trees alone are not
+detected by this advisory check.
+
 ## Risk gates
 
 See `methodology/RISK-MODEL.md` for the full table. In this reference
@@ -139,7 +169,10 @@ scripts/handoff/generate-handoff.sh /path/to/project --stage handoff --risk CRIT
 ```
 
 A CRITICAL-risk `generate-handoff.sh` call without `--approved-by` exits
-`1` and writes nothing. With `--approved-by`, it appends a line to
+`1` and writes nothing. Explicit empty or whitespace-only `--approved-by`
+values are also rejected, at every risk level. All rejected input is checked
+before backups, handoff writes, or approval appends. With a nonblank
+`--approved-by`, it appends a line to
 `.engineering-workflow/APPROVALS.log` (append-only — never rotate or
 truncate this file; it is the durable record, not `HANDOFF.md`) before
 writing the (still disposable) `HANDOFF.md`. A commit trailer
@@ -149,6 +182,12 @@ an authenticated identity** — it records accountability (like a git
 commit's author field), not cryptographic proof that a human approved the
 change. For CRITICAL work where that distinction matters, pair it with a
 real approval channel your team already trusts.
+
+The approval log retains its existing seven pipe-separated fields. CR, LF,
+and `|` in free-text values are replaced by spaces before append, so callers
+cannot inject extra records or fields. This is intentionally lossy display
+sanitization, not an escaping/round-trip format. Existing log records are
+not rewritten or retroactively sanitized.
 
 LOW/MEDIUM/HIGH review depth (self-review vs. independent review vs.
 adversarial review) is a documented convention in `RISK-MODEL.md` and the

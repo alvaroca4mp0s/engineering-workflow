@@ -45,8 +45,8 @@ Per the approved design, do not add these without a deliberate new bet:
 - Per-stage Claude Code skills (only `CLAUDE.md`/`AGENTS.md` templates exist)
 - Mechanical enforcement of LOW/MEDIUM/HIGH review depth (only CRITICAL's
   approval gate is scripted so far)
-- A JSON-schema validator for `workflow.config.json` (currently only
-  checked for being valid JSON, not for required fields)
+- A general-purpose JSON Schema engine (version-1 required fields and
+  enums are now validated directly with jq; see `docs/OPERATIONS.md`)
 
 ## Compatibility constraints to preserve
 

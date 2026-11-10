@@ -353,10 +353,14 @@ scripts/handoff/generate-handoff.sh /path/to/project \
   --note "what's done, what's next, anything a fresh agent needs to know"
 ```
 
-`--stage` is free-form text, not validated — using one of the lifecycle
-names (`discover`, `shape`, `spec`, `implement`, `verify`, `review`,
-`document`, `handoff`) is a convention, not an enforced enum. `--risk`, in
-contrast, *is* validated and must be exactly one of `LOW`/`MEDIUM`/`HIGH`/`CRITICAL`.
+`--stage` is validated against `discover`, `shape`, `spec`, `implement`,
+`verify`, `review`, `document`, `handoff`, and `commit`, plus the compatibility
+labels `init` and `unspecified` (default). Case is normalized to lowercase;
+other labels are rejected. This is not lifecycle orchestration. `--risk`
+must be exactly one of `LOW`/`MEDIUM`/`HIGH`/`CRITICAL`; if omitted, the
+validated version-1 contract's `risk.default` is used. Invalid contracts and
+blank approvers are rejected before writing. See `docs/OPERATIONS.md` for
+the structure rules and approval-log delimiter sanitization.
 
 This stamps in the current git branch/HEAD/status automatically and backs
 up the previous `HANDOFF.md`. The next agent — same one in a new session,
@@ -366,8 +370,9 @@ or a different one entirely — reads it with:
 scripts/handoff/read-handoff.sh /path/to/project
 ```
 
-and, per "Resuming an existing project" above, treats it as an
-accelerant, not authority. When Claude Code + codex-plugin-cc are both
+The reader warns on stderr when recorded Git HEAD differs from current
+HEAD, but still prints the handoff. Per "Resuming an existing project"
+above, treat it as an accelerant, not authority. When Claude Code + codex-plugin-cc are both
 available, `/codex:transfer` can additionally hand the *conversation
 itself* to Codex — but the file-based handoff above is what makes the
 protocol work everywhere else too.

@@ -21,5 +21,7 @@ if [ ! -f "$handoff_file" ]; then
   exit 1
 fi
 
+ew_warn_stale_handoff "$TARGET" "$handoff_file"
+
 echo "=== HANDOFF (disposable — see methodology/OVERVIEW.md principle 7) ==="
 cat "$handoff_file"

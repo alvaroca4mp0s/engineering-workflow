@@ -4,7 +4,7 @@
 #
 # Exit codes:
 #   0 = done, no conflicts (includes idempotent no-op re-runs)
-#   1 = hard error (bad target, not a git repo, missing dependency)
+#   1 = hard error (bad target, not a git repo, missing dependency, invalid contract)
 #   2 = completed, but one or more managed files already existed as
 #       foreign (non-engineering-workflow) files — proposals were written,
 #       nothing was overwritten, manual resolution required.
@@ -34,6 +34,10 @@ if ! git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 
 EW_DIR="$TARGET/.engineering-workflow"
+# Refuse invalid existing contracts before changing any project files.
+if [ -e "$EW_DIR/workflow.config.json" ]; then
+  ew_validate_contract "$EW_DIR/workflow.config.json" || exit 1
+fi
 mkdir -p "$EW_DIR/backups" "$EW_DIR/proposals"
 
 ew_log_info "target: $TARGET"
@@ -99,11 +103,7 @@ done
 # --- workflow.config.json -----------------------------------------------
 config_file="$EW_DIR/workflow.config.json"
 if [ -f "$config_file" ]; then
-  if jq empty "$config_file" >/dev/null 2>&1; then
-    ew_log_info "workflow.config.json already present and valid — left untouched"
-  else
-    ew_log_warn "workflow.config.json exists but is not valid JSON — left untouched, please fix manually"
-  fi
+  ew_log_info "workflow.config.json already present and valid — left untouched"
 else
   project_name=$(basename "$TARGET")
   jq --arg name "$project_name" '.project_name = $name' \
@@ -152,7 +152,7 @@ else
   "$SCRIPT_DIR/handoff/generate-handoff.sh" "$TARGET" \
     --stage init --risk LOW \
     --note "Project initialized by engineering-workflow init-project.sh v$EW_VERSION." \
-    >/dev/null
+    >/dev/null || exit 1
   ew_log_info "created $handoff_file"
 fi
 
