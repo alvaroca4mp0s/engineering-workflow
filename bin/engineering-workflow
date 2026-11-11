@@ -35,6 +35,9 @@ engineering-workflow — portable agent-agnostic development methodology
 Usage:
   engineering-workflow doctor
   engineering-workflow init [target-dir]
+  engineering-workflow verify [target-dir]
+  engineering-workflow handoff generate <target-dir> [handoff-options]
+  engineering-workflow handoff read [target-dir]
   engineering-workflow uninstall
   engineering-workflow version
 
@@ -42,6 +45,9 @@ Each subcommand is also directly runnable from a clone without installing:
   $EW_REPO_ROOT/scripts/doctor.sh
   $EW_REPO_ROOT/scripts/init-project.sh [target-dir]
   $EW_REPO_ROOT/scripts/uninstall.sh
+  $EW_REPO_ROOT/scripts/verify-project.sh [target-dir]
+  $EW_REPO_ROOT/scripts/handoff/generate-handoff.sh <target-dir> [--require-verify] [handoff-options]
+  $EW_REPO_ROOT/scripts/handoff/read-handoff.sh [target-dir]
 EOF
 }
 
@@ -51,6 +57,15 @@ cmd="${1:-}"
 case "$cmd" in
   doctor)    exec "$EW_REPO_ROOT/scripts/doctor.sh" "$@" ;;
   init)      exec "$EW_REPO_ROOT/scripts/init-project.sh" "$@" ;;
+  verify)    exec "$EW_REPO_ROOT/scripts/verify-project.sh" "$@" ;;
+  handoff)
+    subcmd="${1:-}"
+    [ $# -gt 0 ] && shift || true
+    case "$subcmd" in
+      generate) exec "$EW_REPO_ROOT/scripts/handoff/generate-handoff.sh" "$@" ;;
+      read) exec "$EW_REPO_ROOT/scripts/handoff/read-handoff.sh" "$@" ;;
+      *) printf '[ew] invalid handoff subcommand: %s (use generate or read)\n' "${subcmd:-<missing>}" >&2; exit 1 ;;
+    esac ;;
   uninstall) exec "$EW_REPO_ROOT/scripts/uninstall.sh" "$@" ;;
   version)   cat "$EW_REPO_ROOT/VERSION" ;;
   ""|help|-h|--help) usage ;;

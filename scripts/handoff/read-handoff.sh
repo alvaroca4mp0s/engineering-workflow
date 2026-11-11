@@ -21,5 +21,12 @@ if [ ! -f "$handoff_file" ]; then
   exit 1
 fi
 
+ew_warn_stale_handoff "$TARGET" "$handoff_file"
+if [ -e "$TARGET/.engineering-workflow/VERIFY.json" ]; then
+  if ! verify_problem=$(ew_check_verify "$TARGET"); then
+    ew_log_warn "$verify_problem (advisory)"
+  fi
+fi
+
 echo "=== HANDOFF (disposable — see methodology/OVERVIEW.md principle 7) ==="
 cat "$handoff_file"

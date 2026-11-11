@@ -9,18 +9,18 @@
 
 # Handoff
 
-- Generated at: 2026-08-22T20:34:03Z
-- Stage: handoff
-- Risk: MEDIUM
-- Git branch: main
-- Git HEAD: ceac779
+- Generated at: 2026-11-11T16:21:28Z
+- Stage: document
+- Risk: HIGH
+- Git branch: feat/ew-gov-01a
+- Git HEAD: 7620717
 
 ## Note
 
-BET 2 CLOSED and PUSHED. Ubuntu portability validated on Ubuntu Server 24.04.4 LTS x86_64 (bash 5.2.21, git 2.43, jq 1.7, kernel 6.8). Full core path + installed dispatcher + 8/8 suite, zero code changes. Review: PASS (claim-precision only). Commit ceac779 on origin/main (local in sync). VERIFY green. Not yet verified: arm64, Ubuntu Desktop. Next candidate bet: arm64/Desktop coverage.
+EW-GOV-01B: CLEAN REVIEW (Auditor QA). Implementación verificada en e2e7a9c. Tests 11/11, build OK, whitespace OK. Pruebas manuales: default target, FAIL exit propagation, REPLACE_ME blocking, evidencia preservada, trailing newlines, --require-verify gate. Sin findings bloqueantes. Riesgos residuales documentados en OPERATIONS.md. Pendiente: push/merge a discreción del mantenedor. stash@{0} preservado.
 
 ## Git status at generation time
 
 ```
-(clean)
+ M .engineering-workflow/VERIFY.json
 ```
