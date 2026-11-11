@@ -9,15 +9,15 @@
 
 # Handoff
 
-- Generated at: 2026-11-11T16:21:28Z
-- Stage: document
-- Risk: HIGH
-- Git branch: feat/ew-gov-01a
-- Git HEAD: 7620717
+- Generated at: 2026-11-11T20:50:37Z
+- Stage: handoff
+- Risk: LOW
+- Git branch: main
+- Git HEAD: 3a0a799
 
 ## Note
 
-EW-GOV-01B: CLEAN REVIEW (Auditor QA). Implementación verificada en e2e7a9c. Tests 11/11, build OK, whitespace OK. Pruebas manuales: default target, FAIL exit propagation, REPLACE_ME blocking, evidencia preservada, trailing newlines, --require-verify gate. Sin findings bloqueantes. Riesgos residuales documentados en OPERATIONS.md. Pendiente: push/merge a discreción del mantenedor. stash@{0} preservado.
+EW-GOV-01A y EW-GOV-01B mergeados a main (3a0a799). Push completado. stash@{0} (INFORME.md) preservado. Sin trabajo pendiente.
 
 ## Git status at generation time
 
