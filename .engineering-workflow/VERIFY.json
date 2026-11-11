@@ -1,7 +1,7 @@
 {
   "schema_version": "1",
-  "verified_at": "2026-11-11T16:20:01Z",
-  "git_head": "e2e7a9cae553ed0de40be77bf52eb519e237b36d",
+  "verified_at": "2026-11-11T16:21:22Z",
+  "git_head": "7620717d6697bf20f13bdb80cb4c893d972fc0fc",
   "git_tree_dirty": false,
   "command": "./tests/run.sh",
   "exit_code": 0,
