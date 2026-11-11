@@ -115,8 +115,12 @@ CRITICAL
 ```
 
 The goal is proportional rigor, not ceremony for its own sake. In v0.1.0,
-only the CRITICAL gate is mechanically enforced (a CRITICAL handoff refuses
+CRITICAL approval is mechanically enforced (a CRITICAL handoff refuses
 to write without `--approved-by`, recorded durably outside `HANDOFF.md`).
+`engineering-workflow verify` runs the declared command and retains its
+latest result; handoff generation can require clean, current VERIFY evidence
+with `--require-verify` (otherwise checks are advisory). See
+[`docs/OPERATIONS.md`](docs/OPERATIONS.md).
 LOW/MEDIUM/HIGH review depth is a documented convention, not yet
 script-enforced. Full table and rules: `methodology/RISK-MODEL.md`.
 

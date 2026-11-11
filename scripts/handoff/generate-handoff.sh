@@ -8,6 +8,7 @@
 # Usage:
 #   generate-handoff.sh <target-dir> [--stage STAGE] [--risk LEVEL]
 #                        [--note TEXT] [--approved-by NAME] [--approved-at WHEN]
+#                        [--require-verify]
 set -uo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -19,7 +20,7 @@ EW_VERSION=$(cat "$EW_REPO_ROOT/VERSION")
 
 TARGET="${1:-}"
 if [ -z "$TARGET" ] || [ ! -d "$TARGET" ]; then
-  ew_log_error "usage: generate-handoff.sh <target-dir> [--stage STAGE] [--risk LEVEL] [--note TEXT] [--approved-by NAME] [--approved-at WHEN]"
+  ew_log_error "usage: generate-handoff.sh <target-dir> [--stage STAGE] [--risk LEVEL] [--note TEXT] [--approved-by NAME] [--approved-at WHEN] [--require-verify]"
   exit 1
 fi
 TARGET=$(cd "$TARGET" && pwd)
@@ -29,6 +30,7 @@ stage="unspecified"
 risk=""
 risk_provided=0
 approval_provided=0
+require_verify=0
 note=""
 approved_by=""
 approved_at=""
@@ -42,6 +44,7 @@ while [ $# -gt 0 ]; do
       fi ;;
   esac
   case "$1" in
+    --require-verify) require_verify=1; shift ;;
     --stage) stage="$2"; shift 2 ;;
     --risk) risk="$2"; risk_provided=1; shift 2 ;;
     --note) note="$2"; shift 2 ;;
@@ -74,6 +77,21 @@ case "$risk" in
   LOW|MEDIUM|HIGH|CRITICAL) : ;;
   *) ew_log_error "invalid --risk '$risk' (must be LOW, MEDIUM, HIGH, or CRITICAL)"; exit 1 ;;
 esac
+
+# Evidence checks must precede ANY approval append, backup or handoff write.
+if [ "$require_verify" -eq 1 ]; then
+  if ! verify_problem=$(ew_check_verify "$TARGET" 1); then
+    ew_log_error "--require-verify: $verify_problem"
+    exit 1
+  fi
+else
+  case "$stage" in
+    verify|review|document|handoff|commit)
+      if ! verify_problem=$(ew_check_verify "$TARGET"); then
+        ew_log_warn "$verify_problem (advisory; use --require-verify to enforce)"
+      fi ;;
+  esac
+fi
 
 # --- CRITICAL gate: require a durable approval, recorded outside HANDOFF.md
 if [ "$risk" = "CRITICAL" ]; then

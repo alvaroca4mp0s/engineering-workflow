@@ -34,6 +34,23 @@ Add a new test by dropping a `tests/test_*.sh` file that sources
 `tests/lib/assert.sh` and `tests/lib/fixtures.sh`, sets its own `$HOME`,
 and exits non-zero on failure — `tests/run.sh` picks it up automatically.
 
+## VERIFY evidence (EW-GOV-01B)
+
+`scripts/verify-project.sh` executes the trusted contract command and
+atomically replaces `.engineering-workflow/VERIFY.json` with its latest
+result. `tests/test_verify_evidence.sh` covers preflight rejection, exact
+command and cwd, PASS/FAIL exit codes, dirty/stale/malformed evidence,
+strict handoff write protection, rename failure and dispatcher symlinks.
+The ten pre-existing suites remain unchanged. Run `./tests/run.sh` and the
+contract's build command after modifying the runner or evidence checks.
+
+The default scoped ignore template is unchanged: VERIFY.json is not ignored
+by E-W, while backups/proposals remain local. Broader project ignores are
+preserved. Evidence is unsigned, replaceable, and has no retention history
+or concurrency lock. Generation checks remain advisory unless explicitly
+requested via `--require-verify`; review depth is not enforced. Full behavior
+and trust boundaries: `docs/OPERATIONS.md`.
+
 ## What's deliberately out of scope in v0.1.0 (BET 1)
 
 Per the approved design, do not add these without a deliberate new bet:
@@ -55,8 +72,9 @@ Per the approved design, do not add these without a deliberate new bet:
   default and this tool must not require Homebrew bash.
 - `jq` is a hard dependency by design (see the approved design decision in
   project history) — do not add a grep/sed/awk JSON-parsing fallback.
-- No script may write outside of: `$HOME/.local/bin`,
+- Tool-managed writes must stay within: `$HOME/.local/bin`,
   `$HOME/.config/engineering-workflow`, or the target project's own
   `.engineering-workflow/`/`AGENTS.md`/`CLAUDE.md`. This is what keeps
   `install.sh`/`init-project.sh`/`uninstall.sh` safe to run without a
-  sandbox.
+  sandbox. The VERIFY command itself is trusted project code, executed
+  without sandboxing; its filesystem effects are not restricted by E-W.

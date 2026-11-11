@@ -73,6 +73,21 @@ DISCOVER → SHAPE → SPEC → IMPLEMENT → VERIFY → REVIEW → DOCUMENT →
 
 Full text and all 14 principles: `methodology/OVERVIEW.md`.
 
+## Executing the declared VERIFY command
+
+```bash
+engineering-workflow verify /path/to/project
+# direct: scripts/verify-project.sh /path/to/project
+```
+
+The runner validates the contract, rejects `REPLACE_ME`, and runs
+`commands.verify` via `bash -c` in the project directory. Trust the contract
+before executing it: this is not sandboxed. It propagates the command's
+exit code and atomically replaces `.engineering-workflow/VERIFY.json` with
+the latest command, timestamp, HEAD, dirty flag, exit code and PASS/FAIL.
+Persistence/preflight errors return `1`. PASS does not imply a clean tree.
+See `docs/OPERATIONS.md` for the schema, exclusions and trust limits.
+
 ## VERIFY vs. REVIEW vs. ADVERSARIAL REVIEW
 
 These three are easy to conflate. They are not the same thing:
@@ -362,6 +377,15 @@ validated version-1 contract's `risk.default` is used. Invalid contracts and
 blank approvers are rejected before writing. See `docs/OPERATIONS.md` for
 the structure rules and approval-log delimiter sanitization.
 
+The dispatcher also exposes `engineering-workflow handoff generate <target>
+[options]` and `engineering-workflow handoff read [target]`. Generation in
+post-VERIFY stages warns when evidence is missing, invalid, failed, stale,
+or records dirty state. `--require-verify` instead rejects before any writes
+unless evidence is PASS for current HEAD with a clean recorded **and current**
+tree (excluding handoff/evidence snapshots). Reading warns about problematic
+existing evidence without blocking. This does not execute VERIFY or enforce
+independent review; see the full rules in `docs/OPERATIONS.md`.
+
 This stamps in the current git branch/HEAD/status automatically and backs
 up the previous `HANDOFF.md`. The next agent — same one in a new session,
 or a different one entirely — reads it with:
@@ -456,11 +480,12 @@ never removed). Idempotent — safe to re-run.
 - `bash` 3.2+ (no bash-4-only syntax anywhere in `scripts/` or `bin/`).
 - `jq` is a hard, deliberate dependency — no grep/sed/awk JSON-parsing
   fallback exists or is planned for it.
-- No script writes outside of `$HOME/.local/bin`,
+- Tool-managed writes stay within `$HOME/.local/bin`,
   `$HOME/.config/engineering-workflow`, or the target project's own
   `.engineering-workflow/`/`AGENTS.md`/`CLAUDE.md` — this is what keeps
   `install.sh`/`init-project.sh`/`uninstall.sh` safe to run without a
-  sandbox.
+  sandbox. The VERIFY runner is different: the project's declared shell
+  command is trusted code and can write anywhere your privileges allow.
 
 ## Updating the methodology without breaking existing projects
 

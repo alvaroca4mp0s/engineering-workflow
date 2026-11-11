@@ -74,7 +74,7 @@ either the existing file is replaced with a marked one, or you accept
 living with the conflict warning.
 
 Exit codes for `init-project.sh`: `0` = clean (including a no-op re-run),
-`1` = hard error (bad target, not a git repo, missing dependency), `2` =
+`1` = hard error (bad target, not a git repo, missing dependency, invalid contract), `2` =
 completed with at least one unresolved conflict.
 
 ## Idempotency
@@ -117,6 +117,59 @@ structure, not command correctness, path safety, or completed verification;
 it never executes commands. Template placeholder commands remain valid
 structurally and must still be replaced by the project.
 
+## Running VERIFY and retaining evidence
+
+```bash
+engineering-workflow verify /path/to/project
+# equivalent: ./scripts/verify-project.sh /path/to/project
+# target defaults to the current directory
+```
+
+The runner validates the Git working tree and version-1 contract, rejects
+`commands.verify` containing `REPLACE_ME` or NUL bytes, then executes the
+exact declared command using `bash -c` in the target directory. **Only run
+trusted contracts**: this executes arbitrary shell code with your privileges,
+not a sandbox. Output streams directly to the terminal; the runner captures
+the actual exit code, not an agent's interpretation of the output.
+
+The latest result replaces `.engineering-workflow/VERIFY.json` via a
+same-directory temporary file and atomic rename:
+
+```json
+{
+  "schema_version": "1",
+  "verified_at": "2026-11-11T12:00:00Z",
+  "git_head": "<full commit hash, or no-commits>",
+  "git_tree_dirty": false,
+  "command": "<exact commands.verify string>",
+  "exit_code": 0,
+  "status": "PASS"
+}
+```
+
+`status` is `PASS` exactly when `exit_code` is zero, otherwise `FAIL`.
+The script returns the command's exit code, including failures such as `7`.
+Preflight or evidence-persistence errors return `1`; they never publish a
+new PASS. A previous result remains untouched on preflight or rename errors.
+Consult the runner's exit code as well as the file; old evidence alone
+cannot demonstrate that the latest attempted run succeeded.
+
+HEAD and dirty state are sampled after the command, before creating the
+temporary file. `git_tree_dirty` includes tracked and individual untracked
+changes except `.engineering-workflow/VERIFY.json` and
+`.engineering-workflow/HANDOFF.md`; normal Git ignore rules still apply.
+If the command itself moves HEAD, the runner conservatively sets dirty to
+true. PASS may therefore legitimately record a dirty working tree: it means
+the command succeeded, not that a clean committed snapshot was verified.
+
+The default ignore template does **not** ignore `VERIFY.json`; it can be
+transported in Git if desired. Existing project ignore rules are not
+rewritten: a project's broader rules may ignore it, but local handoff
+checks still read it directly. This is a mutable latest-result snapshot,
+not an append-only history, signed attestation, output archive, or evidence
+of independent review. Do not run concurrent verifications on the same
+project: atomic replacement prevents partial JSON, not last-writer races.
+
 ## Handoff
 
 `HANDOFF.md` is a **disposable** operational artifact (see
@@ -129,6 +182,10 @@ scripts/handoff/generate-handoff.sh /path/to/project \
   --stage implement --risk MEDIUM --note "what's done, what's next"
 
 scripts/handoff/read-handoff.sh /path/to/project
+
+# Same operations through the dispatcher:
+engineering-workflow handoff generate /path/to/project --stage review
+engineering-workflow handoff read /path/to/project
 ```
 
 Each `generate-handoff.sh` call backs up the previous `HANDOFF.md` (to
@@ -153,11 +210,39 @@ of the same commit compare equal. Legacy handoffs without HEAD metadata
 remain readable without a comparison; dirty working trees alone are not
 detected by this advisory check.
 
+### Evidence checks in handoffs
+
+For `--stage verify`, `review`, `document`, `handoff`, or `commit`, generation
+warns on stderr if evidence is absent, malformed, FAIL, stale by HEAD, or
+records a dirty tree. This remains advisory to preserve existing workflows.
+The reader warns for those problems when evidence exists; missing evidence
+alone does not warn in the reader (legacy compatibility). Neither operation
+executes VERIFY automatically.
+
+```bash
+engineering-workflow handoff generate /path/to/project \
+  --stage review --require-verify --note "ready for independent QA"
+```
+
+`--require-verify` opts into a hard gate at **any** stage: the evidence must
+be structurally valid, PASS, for current HEAD and record `git_tree_dirty:
+false`. The current tree must also be clean under the same exclusions, so
+edits after a clean run cannot bypass the gate. Failure exits `1` before
+approval-log append, backup, or handoff write. Schema/status validation
+rejects inconsistent results (for example PASS with a nonzero exit code).
+
+These checks do not authenticate the file, fingerprint the tree contents,
+compare command histories, or enforce review. Manual evidence editing and
+changes confined to ignored paths cannot be detected. Rerun VERIFY after
+changing code/configuration; commit changes and rerun if clean evidence is
+needed. Advisory mode does not inspect current dirty state independently
+of the recorded flag; strict mode does.
+
 ## Risk gates
 
 See `methodology/RISK-MODEL.md` for the full table. In this reference
-implementation, the only gate that is mechanically enforced (as opposed to
-just documented) is CRITICAL:
+implementation, CRITICAL approval is enforced on every CRITICAL handoff;
+VERIFY evidence is enforced only when `--require-verify` is requested:
 
 ```bash
 # refused — no durable approval given

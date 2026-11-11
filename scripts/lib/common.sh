@@ -69,6 +69,57 @@ ew_warn_stale_handoff() {
   fi
 }
 
+# Ignore only the two generated snapshots, not other project changes.
+# Enumerate untracked files individually (never a collapsed directory).
+ew_git_tree_dirty() {
+  local changes
+  changes=$(git -C "$1" status --porcelain --untracked-files=all -- ':/' \
+    ':(exclude).engineering-workflow/VERIFY.json' \
+    ':(exclude).engineering-workflow/HANDOFF.md') || return 1
+  if [ -n "$changes" ]; then printf 'true'; else printf 'false'; fi
+}
+
+# Return a human-readable reason on stdout and failure if evidence cannot
+# support this handoff. Strict mode also checks the CURRENT working tree.
+# Never source/eval evidence: it is untrusted, unsigned JSON data.
+ew_check_verify() {
+  local target="$1" strict="${2:-0}" evidence head dirty
+  evidence="$target/.engineering-workflow/VERIFY.json"
+  if [ ! -f "$evidence" ]; then
+    printf 'VERIFY evidence missing'; return 1
+  fi
+  if ! command -v jq >/dev/null 2>&1 || ! jq -e -s '
+    length == 1 and (.[0] | type == "object" and
+      .schema_version == "1" and
+      (.verified_at | type == "string" and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")) and
+      (.git_head | type == "string" and length > 0) and
+      (.git_tree_dirty | type == "boolean") and
+      (.command | type == "string" and length > 0) and
+      (.exit_code | type == "number" and . == floor and . >= 0 and . <= 255) and
+      ((.status == "PASS" and .exit_code == 0) or
+       (.status == "FAIL" and .exit_code != 0)))
+    ' "$evidence" >/dev/null 2>&1; then
+    printf 'VERIFY evidence invalid'; return 1
+  fi
+  if [ "$(jq -r '.status' "$evidence")" != PASS ]; then
+    printf 'VERIFY evidence reports FAIL'; return 1
+  fi
+  head=$(git -C "$target" rev-parse --verify HEAD 2>/dev/null || printf 'no-commits')
+  if [ "$(jq -r '.git_head' "$evidence")" != "$head" ]; then
+    printf 'VERIFY evidence has stale Git HEAD'; return 1
+  fi
+  if [ "$(jq -r '.git_tree_dirty' "$evidence")" != false ]; then
+    printf 'VERIFY evidence records a dirty tree'; return 1
+  fi
+  if [ "$strict" -eq 1 ]; then
+    dirty=$(ew_git_tree_dirty "$target") || { printf 'cannot inspect Git tree'; return 1; }
+    if [ "$dirty" != false ]; then
+      printf 'current Git tree is dirty; rerun VERIFY on a clean tree'; return 1
+    fi
+  fi
+  return 0
+}
+
 # ew_require_cmd <cmd> <install-hint>
 # Exits 1 if <cmd> is not on PATH.
 ew_require_cmd() {
