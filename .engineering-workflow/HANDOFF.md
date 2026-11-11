@@ -9,49 +9,32 @@
 
 # Handoff
 
-- Generated at: 2026-11-11T15:40:40Z
-- Stage: review
+- Generated at: 2026-11-11T16:20:18Z
+- Stage: commit
 - Risk: HIGH
 - Git branch: feat/ew-gov-01a
-- Git HEAD: 53c0a0c
+- Git HEAD: e2e7a9c
 
 ## Note
 
-Destinatario: Auditor QA — EW-GOV-01B, IMPLEMENT y VERIFY completados; revisión independiente HIGH pendiente. No declarar cierre sin dictamen QA.
+Destinatario: mantenedor / Auditor QA — EW-GOV-01B, implementación comiteada por autorización explícita del usuario.
 
-Baseline de esta sesión: feat/ew-gov-01a, HEAD 53c0a0c (árbol inicialmente limpio). Especificación autorizada: git show 53c0a0c:.engineering-workflow/HANDOFF.md, sección 2. EW-GOV-01A continúa cerrado en b3554f6 con CLEAN REVIEW. No se hicieron commits, push ni merge. stash@{0} (INFORME.md) preservado sin restaurar ni eliminar.
+Implementación: e2e7a9c (feat(gov): add VERIFY runner and persisted evidence (EW-GOV-01B)), sobre 53c0a0c en feat/ew-gov-01a. Incluye runner VERIFY, persistencia atómica, controles consultivos/--require-verify, dispatcher verify/handoff, pruebas y documentación. Los diez tests preexistentes permanecen intactos.
 
-Diff: git diff -- README.md bin/engineering-workflow scripts/lib/common.sh scripts/handoff/generate-handoff.sh scripts/handoff/read-handoff.sh docs/OPERATIONS.md docs/ENGINEERING-WORKFLOW-HANDBOOK.md docs/MAINTENANCE.md .engineering-workflow/HANDOFF.md
-Nuevos archivos NO incluidos en git diff normal: scripts/verify-project.sh (ejecutable), tests/test_verify_evidence.sh (ejecutable), .engineering-workflow/VERIFY.json (evidencia generada). Revisar con git diff --no-index -- /dev/null <archivo>; exit 1 significa diferencias. Los diez tests anteriores no se modificaron; git diff 53c0a0c -- tests/ debe quedar vacío mientras el nuevo test siga no versionado.
+Verificación posterior al commit de implementación: ./bin/engineering-workflow verify . ejecutó ./tests/run.sh => 11/11 PASS, exit 0; VERIFY.json registra git_head=e2e7a9c (hash completo en JSON), git_tree_dirty=false, status=PASS, exit_code=0. Build declarado bash -n bin/engineering-workflow scripts/*.sh scripts/handoff/*.sh scripts/lib/*.sh tests/*.sh tests/lib/*.sh => exit 0; git diff --check => exit 0. Este handoff fue generado con --require-verify, que aceptó evidencia vigente y árbol limpio bajo las exclusiones documentadas.
 
-Implementación: runner preflight Git/contrato, rechazo REPLACE_ME/NUL, comando exacto vía bash -c en target con exit code propagado; resultado schema_version=1 escrito mediante mktemp local + mv atómico y limpieza de temporales. HEAD/dirty muestreados después del comando y antes del temporal. Dirty contempla todo el repo, con untracked individuales y exclusión solo de los dos snapshots en el target (más ignores normales); HEAD cambiado durante el comando fuerza dirty=true. No se alteró la plantilla gitignore.
+Este HANDOFF y VERIFY.json se guardan en un commit posterior de metadatos. Sus HEAD registrados corresponden al commit de implementación comprobado e2e7a9c, no a ese commit posterior. Tras comitear metadatos se espera aviso de HEAD desactualizado: no se edita el hash de la evidencia para simular una verificación que no ocurrió. Para comprobar el HEAD final, volver a ejecutar verify; eso actualizará VERIFY.json localmente.
 
-Handoff: avisos consultivos en etapas verify/review/document/handoff/commit ante evidencia ausente/inválida/FAIL/stale/dirty. Reader avisa solo si existe evidencia problemática, conservando lectura legacy. --require-verify exige evidencia válida PASS HEAD actual y dirty=false, más árbol actual limpio, antes de APPROVALS.log/backups/HANDOFF. Dispatcher expone verify y handoff generate/read, con errores de subcomando descriptivos.
+Autorización operativa de commit recibida en la conversación del usuario. Este registro no añade ni inventa un dictamen independiente CLEAN REVIEW para 01B. EW-GOV-01A conserva su cierre QA anterior. Riesgo HIGH: conservar el dictamen real de revisión por el canal del equipo.
 
-Compatibilidad y documentación: Bash 3.2+, Git y jq, sin dependencias nuevas ni estado/orquestación. OPERATIONS documenta esquema y límites; handbook y MAINTENANCE actualizados. README corregido mínimamente para no afirmar que la aprobación CRITICAL es el único gate mecánico. Documentado que commands.verify es código de confianza y puede escribir fuera de las rutas gestionadas por E-W; no es sandbox.
+Límites: evidencia mutable/no autenticada ni histórica; sin bloqueo concurrente o sandbox de comandos; ignores y manipulación manual fuera de la garantía. --approved-by no autentica identidad humana. Documentación completa en docs/OPERATIONS.md.
 
-Pruebas reales: baseline ./tests/run.sh 10/10 exit 0; suite final 11/11 exit 0. bash tests/test_verify_evidence.sh exit 0. Build declarado bash -n bin/engineering-workflow scripts/*.sh scripts/handoff/*.sh scripts/lib/*.sh tests/*.sh tests/lib/*.sh exit 0. git diff --check exit 0. End-to-end ./bin/engineering-workflow verify . ejecutó ./tests/run.sh 11/11 y devolvió exit 0, generando VERIFY.json status=PASS, exit_code=0, git_tree_dirty=true. Esto NO es evidencia de árbol limpio: los cambios de implementación siguen sin commit por instrucción. El aviso al generar este handoff es esperado; --require-verify debe rechazar este árbol.
+Entorno probado: Bash 3.2.57 macOS arm64, Git 2.54.0, jq 1.7.1. Sin revalidación Linux en esta sesión.
 
-Entorno: Bash 3.2.57 arm64-apple-darwin26, Git 2.54.0 Apple, jq 1.7.1 Apple. Sin revalidación Linux en esta sesión.
-
-Puntos críticos QA: comando exacto (quotes, pipes, saltos finales), cwd/default target; preflight sin ejecución ni publicación PASS; FAIL exit 7; JSON consistente y atómico, fallo mv preserva evidencia anterior y limpia temporal; datos manipulados/malformados; gate estricto sin append ni backup; evidencia ausente/stale/dirty y cambios posteriores; exclusiones de snapshots sin colapsar directorios untracked y alcance de Git en targets anidados; CLI directa e instalada por symlink. Autorrevisión de diff realizada; no cuenta como revisión independiente.
-
-Riesgos residuales explícitos: evidencia mutable/no autenticada, sin historial ni logs stdout/stderr ni bloqueo concurrente. Atomicidad evita JSON parcial, no carreras ni garantiza fsync. Un error de preflight/IO puede dejar resultado anterior: atender exit code. No se compara fingerprint de contenido ni historial de comandos; ignores de Git y manipulación manual quedan fuera de la garantía. Modo consultivo no consulta dirty actual independientemente del flag; modo estricto sí. Ninguna aprobación autentica identidad humana ni se mecaniza profundidad de revisión.
-
-Siguiente paso: Auditor QA inspecciona diff y archivos nuevos, reproduce verify/build/check y evalúa como HIGH; resolver findings según metodología. No commit/push/merge ni ampliación de alcance sin instrucción.
+Sin push ni merge. stash@{0} (INFORME.md) preservado intacto. No avanzar a otra entrega sin instrucción.
 
 ## Git status at generation time
 
 ```
- M README.md
- M bin/engineering-workflow
- M docs/ENGINEERING-WORKFLOW-HANDBOOK.md
- M docs/MAINTENANCE.md
- M docs/OPERATIONS.md
- M scripts/handoff/generate-handoff.sh
- M scripts/handoff/read-handoff.sh
- M scripts/lib/common.sh
-?? .engineering-workflow/VERIFY.json
-?? scripts/verify-project.sh
-?? tests/test_verify_evidence.sh
+ M .engineering-workflow/VERIFY.json
 ```
